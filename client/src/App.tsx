@@ -4,6 +4,7 @@ import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { ProposeRecipePage } from './pages/ProposeRecipePage'
+import { RecipesListPage } from './pages/RecipesListPage'
 import { RegisterPage } from './pages/RegisterPage'
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/recipes" element={<RecipesListPage />} />
       <Route
         path="/profile"
         element={
