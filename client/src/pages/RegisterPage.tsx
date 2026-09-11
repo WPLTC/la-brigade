@@ -45,6 +45,7 @@ export function RegisterPage() {
                 type="text"
                 required
                 minLength={2}
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="rounded-lg border border-charcoal/20 px-3 py-2 outline-none focus:border-brigade-red"
@@ -56,6 +57,7 @@ export function RegisterPage() {
               <input
                 type="email"
                 required
+                autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="rounded-lg border border-charcoal/20 px-3 py-2 outline-none focus:border-brigade-red"
@@ -68,6 +70,7 @@ export function RegisterPage() {
                 type="password"
                 required
                 minLength={8}
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="rounded-lg border border-charcoal/20 px-3 py-2 outline-none focus:border-brigade-red"

@@ -51,6 +51,15 @@ npm run dev              # http://localhost:5173
 
 Le frontend proxy les appels `/api` vers `http://localhost:3001` (voir `client/vite.config.ts`).
 
+### Voir la base de données (Prisma Studio)
+
+```bash
+cd server
+npm run prisma:studio    # http://localhost:5555
+```
+
+Ouvre une interface web pour consulter et éditer les tables (User, Recipe, Ingredient, Step, Comment, Rating) directement dans le navigateur.
+
 ## API
 
 | Méthode | Route                       | Description                              | Auth requise      |
