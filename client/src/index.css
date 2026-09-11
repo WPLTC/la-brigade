@@ -1,1 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --color-cream: #f8f3e8;
+  --color-cream-dark: #eee4cf;
+  --color-charcoal: #2a2422;
+  --color-charcoal-light: #4a423d;
+  --color-brigade-red: #c1272d;
+  --color-brigade-red-dark: #9e1f24;
+  --color-olive: #6b7a3b;
+  --color-olive-light: #8a9c52;
+
+  --font-heading: 'Anton', 'Poppins', sans-serif;
+  --font-sans: 'Poppins', system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-charcoal);
+  font-family: var(--font-sans);
+}
