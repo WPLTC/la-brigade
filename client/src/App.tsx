@@ -4,6 +4,7 @@ import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { ProposeRecipePage } from './pages/ProposeRecipePage'
+import { RecipeDetailPage } from './pages/RecipeDetailPage'
 import { RecipesListPage } from './pages/RecipesListPage'
 import { RegisterPage } from './pages/RegisterPage'
 
@@ -15,18 +16,19 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/recipes" element={<RecipesListPage />} />
       <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/recipes/new"
         element={
           <ProtectedRoute>
             <ProposeRecipePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />
