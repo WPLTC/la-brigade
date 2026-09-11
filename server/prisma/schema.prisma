@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  CHEF_TEAM
+}
+
+enum RecipeStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  recipes   Recipe[]
+  comments  Comment[]
+  ratings   Rating[]
+  createdAt DateTime @default(now())
+}
+
+model Recipe {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  imageUrl    String?
+  status      RecipeStatus @default(PENDING)
+  author      User         @relation(fields: [authorId], references: [id])
+  authorId    String
+  ingredients Ingredient[]
+  steps       Step[]
+  comments    Comment[]
+  ratings     Rating[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Ingredient {
+  id       String @id @default(cuid())
+  name     String
+  quantity String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId String
+}
+
+model Step {
+  id          String @id @default(cuid())
+  order       Int
+  description String
+  recipe      Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId    String
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId  String
+  createdAt DateTime @default(now())
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  value     Int
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId  String
+  createdAt DateTime @default(now())
+
+  @@unique([recipeId, authorId])
+}
