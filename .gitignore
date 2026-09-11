@@ -16,6 +16,10 @@ build/
 server/prisma/dev.db
 server/generated/
 
+# Uploaded files
+server/uploads/*
+!server/uploads/.gitkeep
+
 # Logs
 logs
 *.log

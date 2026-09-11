@@ -65,6 +65,27 @@ export async function createRecipe(req: Request, res: Response) {
   res.status(201).json(recipe)
 }
 
+export async function uploadRecipeImage(req: Request, res: Response) {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Aucune image envoyée' })
+  }
+
+  const recipe = await prisma.recipe.findUnique({ where: { id: req.params.id } })
+  if (!recipe) {
+    return res.status(404).json({ error: 'Recette introuvable' })
+  }
+  if (recipe.authorId !== req.user!.userId) {
+    return res.status(403).json({ error: "Tu ne peux modifier que tes propres recettes" })
+  }
+
+  const updated = await prisma.recipe.update({
+    where: { id: req.params.id },
+    data: { imageUrl: `/uploads/${req.file.filename}` },
+  })
+
+  res.json(updated)
+}
+
 export async function reviewRecipe(req: Request, res: Response) {
   const statusSchema = z.object({ status: z.enum(['VALIDATED', 'REJECTED']) })
   const parsed = statusSchema.safeParse(req.body)

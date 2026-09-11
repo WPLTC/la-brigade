@@ -3,6 +3,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { ProposeRecipePage } from './pages/ProposeRecipePage'
 import { RegisterPage } from './pages/RegisterPage'
 
 function App() {
@@ -16,6 +17,14 @@ function App() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/recipes/new"
+        element={
+          <ProtectedRoute>
+            <ProposeRecipePage />
           </ProtectedRoute>
         }
       />

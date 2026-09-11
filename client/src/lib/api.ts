@@ -42,3 +42,22 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
   return data as T
 }
+
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const token = getToken()
+
+  const res = await fetch(`/api${path}`, {
+    method: 'POST',
+    body: formData,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+
+  const data = await res.json().catch(() => undefined)
+
+  if (!res.ok) {
+    const message = typeof data?.error === 'string' ? data.error : 'Une erreur est survenue'
+    throw new ApiError(message, res.status)
+  }
+
+  return data as T
+}

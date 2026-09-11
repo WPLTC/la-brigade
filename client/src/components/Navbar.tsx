@@ -15,6 +15,12 @@ export function Navbar() {
         <nav className="flex items-center gap-4 text-sm font-medium text-charcoal-light">
           {isAuthenticated ? (
             <>
+              <Link
+                to="/recipes/new"
+                className="rounded-full bg-brigade-red px-4 py-1.5 text-white hover:bg-brigade-red-dark"
+              >
+                Proposer une recette
+              </Link>
               <Link to="/profile" className="hover:text-brigade-red">
                 {user?.name}
               </Link>
