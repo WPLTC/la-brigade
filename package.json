@@ -6,7 +6,7 @@
   "scripts": {
     "install:all": "npm install && npm install --prefix server && npm install --prefix client",
     "db:up": "docker compose up -d",
-    "db:setup": "npm run prisma:deploy --prefix server && npm run db:seed --prefix server",
+    "db:setup": "npm run prisma:generate --prefix server && npm run prisma:deploy --prefix server && npm run db:seed --prefix server",
     "dev": "concurrently -n api,web -c red,blue \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "build": "npm run build --prefix server && npm run build --prefix client",
     "test": "npm test --prefix server",
