@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
+import { ModerationPage } from './pages/ModerationPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { ProposeRecipePage } from './pages/ProposeRecipePage'
 import { RecipeDetailPage } from './pages/RecipeDetailPage'
@@ -29,6 +30,14 @@ function App() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/moderation"
+        element={
+          <ProtectedRoute role="CHEF_TEAM">
+            <ModerationPage />
           </ProtectedRoute>
         }
       />

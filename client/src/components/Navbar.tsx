@@ -36,6 +36,12 @@ export function Navbar() {
                 Proposer une recette
               </Link>
 
+              {user?.role === 'CHEF_TEAM' && (
+                <Link to="/moderation" className="ml-3 hover:text-brigade-red">
+                  Validation
+                </Link>
+              )}
+
               <div className="mx-4 h-6 w-px bg-charcoal/15" />
 
               <Link
