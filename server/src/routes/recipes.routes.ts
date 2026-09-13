@@ -21,6 +21,8 @@ recipesRouter.get('/', listRecipes)
 recipesRouter.get('/:id', optionalAuth, getRecipe)
 recipesRouter.post('/', requireAuth, createRecipe)
 recipesRouter.put('/:id', requireAuth, updateRecipe)
+// Alias conservé pour les clients qui modifient une recette en PATCH
+recipesRouter.patch('/:id', requireAuth, updateRecipe)
 recipesRouter.delete('/:id', requireAuth, deleteRecipe)
 recipesRouter.post('/:id/image', requireAuth, upload.single('image'), uploadRecipeImage)
 recipesRouter.post('/:id/comments', requireAuth, addComment)

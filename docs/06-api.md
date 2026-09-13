@@ -29,7 +29,7 @@ Légende de la colonne « Accès » : **public**, **membre** (connecté), **brig
 | GET | `/recipes` | public | Recettes validées, paginées et filtrées (voir paramètres) |
 | GET | `/recipes/:id` | public* | Détail complet. *Recette non validée : auteur ou brigade uniquement |
 | POST | `/recipes` | membre | Proposer une recette (statut `PENDING`) |
-| PUT | `/recipes/:id` | auteur | Modifier une recette en attente ou refusée ; elle repasse en `PENDING` |
+| PUT (ou PATCH) | `/recipes/:id` | auteur | Modifier une recette en attente ou refusée ; elle repasse en `PENDING` |
 | DELETE | `/recipes/:id` | auteur ou brigade | Supprimer (et son image) |
 | POST | `/recipes/:id/image` | auteur | Envoyer la photo (champ `image`, jpeg/png/webp, 5 Mo) |
 | POST | `/recipes/:id/ratings` | membre | `{ value: 1..5 }`, pas sur sa propre recette ; renvoie la nouvelle moyenne |
