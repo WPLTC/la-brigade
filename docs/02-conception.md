@@ -55,8 +55,8 @@ classDiagram
         +String title
         +String description
         +String? imageUrl
-        +Category category
-        +Difficulty difficulty
+        +RecipeCategory category
+        +RecipeDifficulty difficulty
         +Int prepTime
         +Int cookTime
         +Int totalTime

@@ -20,13 +20,13 @@ enum RecipeStatus {
   REJECTED
 }
 
-enum Category {
+enum RecipeCategory {
   ENTREE
   PLAT
   DESSERT
 }
 
-enum Difficulty {
+enum RecipeDifficulty {
   FACILE
   MOYEN
   DIFFICILE
@@ -59,10 +59,10 @@ model Recipe {
   title         String
   description   String
   imageUrl      String?
-  category      Category     @default(PLAT)
-  difficulty    Difficulty   @default(MOYEN)
+  category      RecipeCategory   @default(PLAT)
+  difficulty    RecipeDifficulty @default(FACILE)
   /// Temps en minutes
-  prepTime      Int          @default(0)
+  prepTime      Int          @default(30)
   cookTime      Int          @default(0)
   /// prepTime + cookTime, dénormalisé pour pouvoir filtrer/trier en SQL
   totalTime     Int          @default(0)

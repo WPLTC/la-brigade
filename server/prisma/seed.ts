@@ -7,7 +7,13 @@
  *   - brigade@labrigade.fr   -> équipe du chef
  *   - lea@example.com, hugo@example.com, ines@example.com, thomas@example.com, sarah@example.com
  */
-import { PrismaClient, type Category, type CommentKind, type Difficulty, type RecipeStatus } from '@prisma/client'
+import {
+  PrismaClient,
+  type CommentKind,
+  type RecipeCategory as Category,
+  type RecipeDifficulty as Difficulty,
+  type RecipeStatus,
+} from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import fs from 'fs'
 import path from 'path'

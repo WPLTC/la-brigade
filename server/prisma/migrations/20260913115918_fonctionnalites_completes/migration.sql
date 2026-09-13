@@ -1,10 +1,4 @@
 -- CreateEnum
-CREATE TYPE "Category" AS ENUM ('ENTREE', 'PLAT', 'DESSERT');
-
--- CreateEnum
-CREATE TYPE "Difficulty" AS ENUM ('FACILE', 'MOYEN', 'DIFFICILE');
-
--- CreateEnum
 CREATE TYPE "CommentKind" AS ENUM ('AVIS', 'CONSEIL');
 
 -- DropForeignKey
@@ -27,11 +21,8 @@ ALTER TABLE "Rating" ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CU
 
 -- AlterTable
 ALTER TABLE "Recipe" ADD COLUMN     "averageRating" DOUBLE PRECISION NOT NULL DEFAULT 0,
-ADD COLUMN     "category" "Category" NOT NULL DEFAULT 'PLAT',
 ADD COLUMN     "cookTime" INTEGER NOT NULL DEFAULT 0,
-ADD COLUMN     "difficulty" "Difficulty" NOT NULL DEFAULT 'MOYEN',
 ADD COLUMN     "isBistronomic" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "prepTime" INTEGER NOT NULL DEFAULT 0,
 ADD COLUMN     "ratingsCount" INTEGER NOT NULL DEFAULT 0,
 ADD COLUMN     "reviewNote" TEXT,
 ADD COLUMN     "reviewedAt" TIMESTAMP(3),
@@ -106,3 +97,7 @@ ALTER TABLE "ChefPick" ADD CONSTRAINT "ChefPick_recipeId_fkey" FOREIGN KEY ("rec
 
 -- AddForeignKey
 ALTER TABLE "ChefPick" ADD CONSTRAINT "ChefPick_chefId_fkey" FOREIGN KEY ("chefId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+
+-- Données existantes : durée totale calculée à partir des temps déjà saisis
+UPDATE "Recipe" SET "totalTime" = "prepTime" + "cookTime";

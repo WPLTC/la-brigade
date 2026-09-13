@@ -33,8 +33,8 @@ erDiagram
         text title
         text description
         text imageUrl
-        Category category
-        Difficulty difficulty
+        RecipeCategory category
+        RecipeDifficulty difficulty
         int prepTime
         int cookTime
         int totalTime
@@ -104,8 +104,8 @@ erDiagram
 |---|---|
 | `Role` | `USER` (membre), `CHEF_TEAM` (brigade) |
 | `RecipeStatus` | `PENDING` (en attente), `VALIDATED` (validée), `REJECTED` (refusée) |
-| `Category` | `ENTREE`, `PLAT`, `DESSERT` |
-| `Difficulty` | `FACILE`, `MOYEN`, `DIFFICILE` |
+| `RecipeCategory` | `ENTREE`, `PLAT`, `DESSERT` |
+| `RecipeDifficulty` | `FACILE`, `MOYEN`, `DIFFICILE` |
 | `CommentKind` | `AVIS`, `CONSEIL` |
 
 ### Recipe
