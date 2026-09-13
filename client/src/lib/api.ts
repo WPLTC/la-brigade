@@ -1,7 +1,14 @@
 const TOKEN_KEY = 'la-brigade-token'
 
+/** Émis quand l'API répond 401 alors qu'un token était envoyé (session expirée) */
+export const UNAUTHORIZED_EVENT = 'la-brigade:unauthorized'
+
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY)
+  try {
+    return localStorage.getItem(TOKEN_KEY)
+  } catch {
+    return null
+  }
 }
 
 export function setToken(token: string) {
@@ -21,21 +28,35 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const token = getToken()
+  const isFormData = body instanceof FormData
 
-  const res = await fetch(`/api${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  })
+  const headers: Record<string, string> = {}
+  if (token) headers.Authorization = `Bearer ${token}`
+  if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
+
+  let res: Response
+  try {
+    res = await fetch(`/api${path}`, {
+      method,
+      headers,
+      body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
+    })
+  } catch {
+    throw new ApiError('Impossible de joindre le serveur', 0)
+  }
+
+  if (res.status === 204) {
+    return undefined as T
+  }
 
   const data = await res.json().catch(() => undefined)
 
   if (!res.ok) {
+    if (res.status === 401 && token) {
+      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
+    }
     const message = typeof data?.error === 'string' ? data.error : 'Une erreur est survenue'
     throw new ApiError(message, res.status)
   }
@@ -43,21 +64,15 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   return data as T
 }
 
-export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
-  const token = getToken()
+export const api = {
+  get: <T>(path: string) => request<T>('GET', path),
+  post: <T>(path: string, body?: unknown) => request<T>('POST', path, body ?? {}),
+  put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body ?? {}),
+  patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body ?? {}),
+  delete: <T = void>(path: string) => request<T>('DELETE', path),
+  upload: <T>(path: string, formData: FormData) => request<T>('POST', path, formData),
+}
 
-  const res = await fetch(`/api${path}`, {
-    method: 'POST',
-    body: formData,
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  })
-
-  const data = await res.json().catch(() => undefined)
-
-  if (!res.ok) {
-    const message = typeof data?.error === 'string' ? data.error : 'Une erreur est survenue'
-    throw new ApiError(message, res.status)
-  }
-
-  return data as T
+export function errorMessage(error: unknown, fallback = 'Une erreur est survenue') {
+  return error instanceof ApiError ? error.message : fallback
 }

@@ -1,123 +1,93 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Navbar } from '../components/Navbar'
-import { apiFetch, ApiError } from '../lib/api'
+import { CircleCheck, CircleX, FlaskConical, Sparkles, Trophy, Users } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { MembersPanel } from '../components/moderation/MembersPanel'
+import { MonthlyPanel } from '../components/moderation/MonthlyPanel'
+import { ReviewQueue } from '../components/moderation/ReviewQueue'
+import { Tabs } from '../components/ui'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { api } from '../lib/api'
+import { plural, relativeDate } from '../lib/format'
+import type { ModerationStats, RecipeStatus } from '../lib/types'
 
-interface PendingRecipe {
-  id: string
-  title: string
-  description: string
-  imageUrl: string | null
-  status: 'PENDING' | 'VALIDATED' | 'REJECTED'
-  author: { id: string; name: string }
-}
+type Tab = RecipeStatus | 'monthly' | 'members'
+const TABS: Tab[] = ['PENDING', 'VALIDATED', 'REJECTED', 'monthly', 'members']
 
 export function ModerationPage() {
-  const [recipes, setRecipes] = useState<PendingRecipe[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [pendingActionId, setPendingActionId] = useState<string | null>(null)
+  useDocumentTitle('Espace brigade')
+  const [params, setParams] = useSearchParams()
+  const tabParam = params.get('tab') as Tab | null
+  const tab: Tab = tabParam && TABS.includes(tabParam) ? tabParam : 'PENDING'
+  const [stats, setStats] = useState<ModerationStats | null>(null)
 
-  function loadRecipes() {
-    apiFetch<PendingRecipe[]>('/recipes')
-      .then((all) => setRecipes(all.filter((r) => r.status === 'PENDING')))
-      .catch(() => setError('Impossible de charger les recettes'))
-  }
-
-  useEffect(() => {
-    loadRecipes()
+  const refreshStats = useCallback(() => {
+    api.get<ModerationStats>('/moderation/stats').then(setStats).catch(() => setStats(null))
   }, [])
 
-  async function handleReview(id: string, status: 'VALIDATED' | 'REJECTED') {
-    setPendingActionId(id)
-    try {
-      await apiFetch(`/recipes/${id}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      })
-      setRecipes((prev) => (prev ? prev.filter((r) => r.id !== id) : prev))
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Action impossible')
-    } finally {
-      setPendingActionId(null)
-    }
-  }
+  useEffect(refreshStats, [refreshStats])
+
+  const tiles = [
+    {
+      label: 'À tester',
+      value: stats?.pending,
+      hint: stats?.oldestPendingAt ? `la plus ancienne ${relativeDate(stats.oldestPendingAt)}` : 'file vide',
+      tone: 'bg-brigade-red text-white',
+    },
+    { label: 'Publiées', value: stats?.validated, hint: plural(stats?.rejected ?? 0, 'refusée'), tone: 'bg-cream/10' },
+    { label: 'Bistronomiques', value: stats?.bistronomic, hint: 'dans la sélection', tone: 'bg-cream/10' },
+    { label: 'Membres', value: stats?.members, hint: `dont ${stats?.chefTeam ?? 0} en brigade`, tone: 'bg-cream/10' },
+  ]
 
   return (
-    <div className="min-h-screen bg-cream">
-      <Navbar />
+    <>
+      <section className="bg-charcoal text-cream">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <p className="eyebrow text-cream/60">Réservé à l'équipe du chef</p>
+          <h1 className="mt-2 font-heading text-5xl uppercase sm:text-6xl">Espace brigade</h1>
+          <p className="mt-2 max-w-2xl text-cream/70">
+            Testez les recettes proposées, faites un retour à leurs auteurs, composez la sélection bistronomique et désignez
+            la recette du mois.
+          </p>
+          <dl className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {tiles.map((tile) => (
+              <div key={tile.label} className={`rounded-2xl p-4 ring-1 ring-cream/10 ${tile.tone}`}>
+                <dd className="font-heading text-4xl">{tile.value ?? '–'}</dd>
+                <dt className="text-sm font-semibold">{tile.label}</dt>
+                <p className="text-xs opacity-70">{tile.hint}</p>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
 
-      <main className="mx-auto max-w-3xl px-4 py-10">
-        <span className="text-3xl">🧑‍🍳</span>
-        <h1 className="mt-2 font-heading text-4xl tracking-wide text-charcoal">
-          Validation par la brigade
-        </h1>
-        <p className="mt-1 text-sm text-charcoal-light">
-          Recettes en attente de validation avant d'être mises en avant.
-        </p>
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <Tabs
+          active={tab}
+          onChange={(next) => setParams(next === 'PENDING' ? {} : { tab: next }, { replace: true })}
+          tabs={[
+            { id: 'PENDING', label: 'À tester', count: stats?.pending, icon: FlaskConical },
+            { id: 'VALIDATED', label: 'Publiées', icon: CircleCheck },
+            { id: 'REJECTED', label: 'Refusées', icon: CircleX },
+            { id: 'monthly', label: 'Recette du mois', icon: Trophy },
+            { id: 'members', label: 'Membres', icon: Users },
+          ]}
+        />
 
-        {error && <p className="mt-4 text-sm text-brigade-red">{error}</p>}
+        <div className="mt-6">
+          {(tab === 'PENDING' || tab === 'VALIDATED' || tab === 'REJECTED') && (
+            <ReviewQueue status={tab} onChanged={refreshStats} />
+          )}
+          {tab === 'monthly' && <MonthlyPanel />}
+          {tab === 'members' && <MembersPanel />}
+        </div>
 
-        {!recipes && !error && <p className="mt-6 text-sm text-charcoal-light">Chargement...</p>}
-
-        {recipes && recipes.length === 0 && (
-          <p className="mt-10 text-center text-sm text-charcoal-light">
-            Aucune recette en attente pour le moment.
+        {tab === 'VALIDATED' && (
+          <p className="mt-6 flex items-center gap-2 text-xs text-charcoal-light">
+            <Sparkles className="h-4 w-4 text-olive" /> Ouvre une recette publiée pour l'ajouter ou la retirer de la sélection
+            bistronomique.
           </p>
         )}
-
-        <div className="mt-6 flex flex-col gap-4">
-          {recipes?.map((recipe) => (
-            <div
-              key={recipe.id}
-              className="flex flex-col gap-4 rounded-2xl border border-charcoal/10 bg-white p-5 shadow-sm sm:flex-row sm:items-center"
-            >
-              <div className="flex h-24 w-32 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-cream-dark">
-                {recipe.imageUrl ? (
-                  <img
-                    src={recipe.imageUrl}
-                    alt={recipe.title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-3xl">🍽️</span>
-                )}
-              </div>
-
-              <div className="flex-1">
-                <Link
-                  to={`/recipes/${recipe.id}`}
-                  className="font-heading text-xl tracking-wide text-charcoal hover:text-brigade-red"
-                >
-                  {recipe.title}
-                </Link>
-                <p className="mt-1 line-clamp-2 text-sm text-charcoal-light">
-                  {recipe.description}
-                </p>
-                <p className="mt-1 text-xs text-charcoal-light">proposée par {recipe.author.name}</p>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={pendingActionId === recipe.id}
-                  onClick={() => handleReview(recipe.id, 'REJECTED')}
-                  className="rounded-full border border-charcoal/20 px-4 py-1.5 text-sm font-medium text-charcoal hover:border-brigade-red hover:text-brigade-red disabled:opacity-50"
-                >
-                  Refuser
-                </button>
-                <button
-                  type="button"
-                  disabled={pendingActionId === recipe.id}
-                  onClick={() => handleReview(recipe.id, 'VALIDATED')}
-                  className="rounded-full bg-olive px-4 py-1.5 text-sm font-medium text-white hover:bg-olive-light disabled:opacity-50"
-                >
-                  Valider
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </main>
-    </div>
+      </div>
+    </>
   )
 }

@@ -1,0 +1,13 @@
+{
+  "name": "La Brigade — Recettes bistronomiques",
+  "short_name": "La Brigade",
+  "description": "Recettes bistronomiques proposées par la communauté et testées par l'équipe du chef.",
+  "lang": "fr",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf6ec",
+  "theme_color": "#d2232a",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
