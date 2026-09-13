@@ -1,57 +1,81 @@
 import bcrypt from 'bcryptjs'
 import type { Request, Response } from 'express'
-import jwt from 'jsonwebtoken'
 import { z } from 'zod'
+import { notFound, conflict, unauthorized } from '../lib/http-error.js'
 import { prisma } from '../lib/prisma.js'
+import { parse } from '../lib/validation.js'
+import { signToken } from '../middleware/auth.js'
+
+const email = z
+  .string({ required_error: "L'email est obligatoire" })
+  .trim()
+  .toLowerCase()
+  .email('Adresse email invalide')
 
 const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  name: z.string().min(2),
+  name: z
+    .string({ required_error: 'Le nom est obligatoire' })
+    .trim()
+    .min(2, 'Le nom doit contenir au moins 2 caractères')
+    .max(60, 'Le nom ne doit pas dépasser 60 caractères'),
+  email,
+  password: z
+    .string({ required_error: 'Le mot de passe est obligatoire' })
+    .min(8, 'Le mot de passe doit contenir au moins 8 caractères')
+    .max(100, 'Le mot de passe est trop long'),
 })
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
+  email,
+  password: z.string({ required_error: 'Le mot de passe est obligatoire' }).min(1, 'Le mot de passe est obligatoire'),
 })
 
-function signToken(userId: string, role: 'USER' | 'CHEF_TEAM') {
-  return jwt.sign({ userId, role }, process.env.JWT_SECRET!, { expiresIn: '7d' })
-}
+export const sessionUserSelect = {
+  id: true,
+  email: true,
+  name: true,
+  bio: true,
+  role: true,
+  createdAt: true,
+} as const
 
 export async function register(req: Request, res: Response) {
-  const parsed = registerSchema.safeParse(req.body)
-  if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.flatten() })
-  }
-  const { email, password, name } = parsed.data
+  const { name, email, password } = parse(registerSchema, req.body)
 
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {
-    return res.status(409).json({ error: 'Un compte existe déjà avec cet email' })
+    throw conflict('Un compte existe déjà avec cet email')
   }
 
-  const hashed = await bcrypt.hash(password, 10)
   const user = await prisma.user.create({
-    data: { email, password: hashed, name },
+    data: { email, name, password: await bcrypt.hash(password, 10) },
+    select: sessionUserSelect,
   })
 
-  const token = signToken(user.id, user.role)
-  res.status(201).json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } })
+  res.status(201).json({ token: signToken({ userId: user.id, role: user.role }), user })
 }
 
 export async function login(req: Request, res: Response) {
-  const parsed = loginSchema.safeParse(req.body)
-  if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.flatten() })
-  }
-  const { email, password } = parsed.data
+  const { email, password } = parse(loginSchema, req.body)
 
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.status(401).json({ error: 'Identifiants invalides' })
+    throw unauthorized('Email ou mot de passe incorrect')
   }
 
-  const token = signToken(user.id, user.role)
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } })
+  const { password: _password, ...sessionUser } = user
+  res.json({ token: signToken({ userId: user.id, role: user.role }), user: sessionUser })
+}
+
+/** Renvoie l'utilisateur connecté et un token à jour (utile si son rôle a changé). */
+export async function me(req: Request, res: Response) {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.userId },
+    select: sessionUserSelect,
+  })
+  if (!user) {
+    throw notFound('Utilisateur introuvable')
+  }
+
+  res.json({ token: signToken({ userId: user.id, role: user.role }), user })
 }

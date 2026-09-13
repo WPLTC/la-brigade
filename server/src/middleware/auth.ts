@@ -1,9 +1,14 @@
 import type { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import { config } from '../config.js'
+import { forbidden, unauthorized } from '../lib/http-error.js'
+import { prisma } from '../lib/prisma.js'
+
+export type UserRole = 'USER' | 'CHEF_TEAM'
 
 export interface AuthPayload {
   userId: string
-  role: 'USER' | 'CHEF_TEAM'
+  role: UserRole
 }
 
 declare module 'express-serve-static-core' {
@@ -12,29 +17,34 @@ declare module 'express-serve-static-core' {
   }
 }
 
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const header = req.headers.authorization
-  const token = header?.startsWith('Bearer ') ? header.slice(7) : undefined
+export function signToken(payload: AuthPayload) {
+  return jwt.sign(payload, config.jwtSecret, { expiresIn: '7d' })
+}
 
+function readToken(req: Request) {
+  const header = req.headers.authorization
+  return header?.startsWith('Bearer ') ? header.slice(7) : undefined
+}
+
+export function requireAuth(req: Request, _res: Response, next: NextFunction) {
+  const token = readToken(req)
   if (!token) {
-    return res.status(401).json({ error: 'Authentification requise' })
+    throw unauthorized()
   }
 
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload
-    next()
+    req.user = jwt.verify(token, config.jwtSecret) as AuthPayload
   } catch {
-    return res.status(401).json({ error: 'Token invalide ou expiré' })
+    throw unauthorized('Session expirée, reconnecte-toi')
   }
+  next()
 }
 
 export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
-  const header = req.headers.authorization
-  const token = header?.startsWith('Bearer ') ? header.slice(7) : undefined
-
+  const token = readToken(req)
   if (token) {
     try {
-      req.user = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload
+      req.user = jwt.verify(token, config.jwtSecret) as AuthPayload
     } catch {
       // token invalide : on continue sans utilisateur authentifié
     }
@@ -42,9 +52,29 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   next()
 }
 
-export function requireChefTeam(req: Request, res: Response, next: NextFunction) {
-  if (req.user?.role !== 'CHEF_TEAM') {
-    return res.status(403).json({ error: "Réservé à l'équipe du chef" })
+/**
+ * Réservé à l'équipe du chef. Le rôle est relu en base (et non depuis le token)
+ * pour qu'une promotion ou un retrait de droits prenne effet immédiatement.
+ */
+export async function requireChefTeam(req: Request, _res: Response, next: NextFunction) {
+  if (!req.user) {
+    throw unauthorized()
   }
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.userId },
+    select: { role: true },
+  })
+  if (user?.role !== 'CHEF_TEAM') {
+    throw forbidden("Réservé à l'équipe du chef")
+  }
+
+  req.user.role = user.role
   next()
+}
+
+export async function isChefTeam(userId: string | undefined) {
+  if (!userId) return false
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } })
+  return user?.role === 'CHEF_TEAM'
 }

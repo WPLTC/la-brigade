@@ -7,49 +7,98 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// USER : membre de la communauté. CHEF_TEAM : membre de la brigade (modération).
 enum Role {
   USER
   CHEF_TEAM
 }
 
+/// Cycle de vie d'une recette : proposée -> testée par la brigade -> validée ou refusée.
 enum RecipeStatus {
   PENDING
   VALIDATED
   REJECTED
 }
 
+enum Category {
+  ENTREE
+  PLAT
+  DESSERT
+}
+
+enum Difficulty {
+  FACILE
+  MOYEN
+  DIFFICILE
+}
+
+/// AVIS : impression générale. CONSEIL : astuce de préparation.
+enum CommentKind {
+  AVIS
+  CONSEIL
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(USER)
-  recipes   Recipe[]
-  comments  Comment[]
-  ratings   Rating[]
-  createdAt DateTime @default(now())
+  id              String     @id @default(cuid())
+  email           String     @unique
+  password        String
+  name            String
+  bio             String?
+  role            Role       @default(USER)
+  recipes         Recipe[]   @relation("RecipeAuthor")
+  reviewedRecipes Recipe[]   @relation("RecipeReviewer")
+  comments        Comment[]
+  ratings         Rating[]
+  favorites       Favorite[]
+  chefPicks       ChefPick[]
+  createdAt       DateTime   @default(now())
 }
 
 model Recipe {
-  id          String       @id @default(cuid())
-  title       String
-  description String
-  imageUrl    String?
-  status      RecipeStatus @default(PENDING)
-  author      User         @relation(fields: [authorId], references: [id])
-  authorId    String
-  ingredients Ingredient[]
-  steps       Step[]
-  comments    Comment[]
-  ratings     Rating[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id            String       @id @default(cuid())
+  title         String
+  description   String
+  imageUrl      String?
+  category      Category     @default(PLAT)
+  difficulty    Difficulty   @default(MOYEN)
+  /// Temps en minutes
+  prepTime      Int          @default(0)
+  cookTime      Int          @default(0)
+  /// prepTime + cookTime, dénormalisé pour pouvoir filtrer/trier en SQL
+  totalTime     Int          @default(0)
+  servings      Int          @default(4)
+  status        RecipeStatus @default(PENDING)
+  /// Sélection "bistronomique" décidée par la brigade
+  isBistronomic Boolean      @default(false)
+  /// Retour de la brigade après test (obligatoire en cas de refus)
+  reviewNote    String?
+  reviewedAt    DateTime?
+  reviewer      User?        @relation("RecipeReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewerId    String?
+  /// Moyenne et nombre de notes, recalculés à chaque notation
+  averageRating Float        @default(0)
+  ratingsCount  Int          @default(0)
+  author        User         @relation("RecipeAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId      String
+  ingredients   Ingredient[]
+  steps         Step[]
+  comments      Comment[]
+  ratings       Rating[]
+  favorites     Favorite[]
+  chefPicks     ChefPick[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([status, createdAt])
+  @@index([category])
+  @@index([authorId])
 }
 
 model Ingredient {
   id       String @id @default(cuid())
   name     String
   quantity String
+  position Int    @default(0)
   recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   recipeId String
 }
@@ -63,23 +112,55 @@ model Step {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   content   String
-  author    User     @relation(fields: [authorId], references: [id])
+  kind      CommentKind @default(AVIS)
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  String
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipe    Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   recipeId  String
-  createdAt DateTime @default(now())
+  createdAt DateTime    @default(now())
+
+  @@index([recipeId, createdAt])
 }
 
 model Rating {
   id        String   @id @default(cuid())
   value     Int
-  author    User     @relation(fields: [authorId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  String
   recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   recipeId  String
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@unique([recipeId, authorId])
+}
+
+/// Recette mise en favori par un membre
+model Favorite {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId  String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, recipeId])
+}
+
+/// "Recette du mois" : la recette la plus populaire du mois, testée par le chef
+model ChefPick {
+  id        String   @id @default(cuid())
+  /// Mois au format AAAA-MM, une seule recette par mois
+  month     String   @unique
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId  String
+  chef      User     @relation(fields: [chefId], references: [id], onDelete: Cascade)
+  chefId    String
+  /// Verdict du chef après dégustation
+  verdict   String
+  /// Score de popularité au moment de la sélection
+  score     Int      @default(0)
+  createdAt DateTime @default(now())
 }
