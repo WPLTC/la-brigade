@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
 import { apiFetch } from '../lib/api'
 
@@ -97,9 +98,17 @@ export function ProfilePage() {
                           <p className="font-medium text-charcoal">{recipe.title}</p>
                           {avg && <p className="text-xs text-charcoal-light">Note moyenne : {avg}/5 ⭐</p>}
                         </div>
-                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLE[recipe.status]}`}>
-                          {STATUS_LABEL[recipe.status]}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLE[recipe.status]}`}>
+                            {STATUS_LABEL[recipe.status]}
+                          </span>
+                          <Link
+                            to={`/recipes/${recipe.id}/edit`}
+                            className="text-xs font-medium text-brigade-red hover:underline"
+                          >
+                            Modifier
+                          </Link>
+                        </div>
                       </li>
                     )
                   })}

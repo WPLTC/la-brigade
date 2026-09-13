@@ -6,6 +6,7 @@ import {
   listRecipes,
   rateRecipe,
   reviewRecipe,
+  updateRecipe,
   uploadRecipeImage,
 } from '../controllers/recipes.controller.js'
 import { optionalAuth, requireAuth, requireChefTeam } from '../middleware/auth.js'
@@ -16,6 +17,7 @@ export const recipesRouter = Router()
 recipesRouter.get('/', optionalAuth, listRecipes)
 recipesRouter.get('/:id', getRecipe)
 recipesRouter.post('/', requireAuth, createRecipe)
+recipesRouter.patch('/:id', requireAuth, updateRecipe)
 recipesRouter.post('/:id/image', requireAuth, upload.single('image'), uploadRecipeImage)
 recipesRouter.patch('/:id/status', requireAuth, requireChefTeam, reviewRecipe)
 recipesRouter.post('/:id/comments', requireAuth, addComment)

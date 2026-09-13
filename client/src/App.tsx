@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { EditRecipePage } from './pages/EditRecipePage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { ModerationPage } from './pages/ModerationPage'
@@ -25,6 +26,14 @@ function App() {
         }
       />
       <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+      <Route
+        path="/recipes/:id/edit"
+        element={
+          <ProtectedRoute>
+            <EditRecipePage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/profile"
         element={
