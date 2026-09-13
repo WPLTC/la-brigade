@@ -18,32 +18,47 @@ enum RecipeStatus {
   REJECTED
 }
 
+enum RecipeCategory {
+  ENTREE
+  PLAT
+  DESSERT
+}
+
+enum RecipeDifficulty {
+  FACILE
+  MOYEN
+  DIFFICILE
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   password  String
   name      String
-  role      Role     @default(USER)
+  role      Role      @default(USER)
   recipes   Recipe[]
   comments  Comment[]
   ratings   Rating[]
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 }
 
 model Recipe {
-  id          String       @id @default(cuid())
+  id          String           @id @default(cuid())
   title       String
   description String
   imageUrl    String?
-  status      RecipeStatus @default(PENDING)
-  author      User         @relation(fields: [authorId], references: [id])
+  status      RecipeStatus     @default(PENDING)
+  prepTime    Int              @default(30)
+  category    RecipeCategory   @default(PLAT)
+  difficulty  RecipeDifficulty @default(FACILE)
+  author      User             @relation(fields: [authorId], references: [id])
   authorId    String
   ingredients Ingredient[]
   steps       Step[]
   comments    Comment[]
   ratings     Rating[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
 model Ingredient {

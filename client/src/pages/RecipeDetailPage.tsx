@@ -1,8 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
+import { ClockIcon, PlateIcon } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import { apiFetch, ApiError } from '../lib/api'
+import {
+  CATEGORY_LABEL,
+  DIFFICULTY_LABEL,
+  DIFFICULTY_STYLE,
+  type RecipeCategory,
+  type RecipeDifficulty,
+} from '../lib/recipeMeta'
 
 interface Ingredient {
   id: string
@@ -34,6 +42,9 @@ interface RecipeDetail {
   title: string
   description: string
   imageUrl: string | null
+  prepTime: number
+  category: RecipeCategory
+  difficulty: RecipeDifficulty
   author: { id: string; name: string }
   ingredients: Ingredient[]
   steps: Step[]
@@ -149,13 +160,29 @@ export function RecipeDetailPage() {
             {recipe.imageUrl ? (
               <img src={recipe.imageUrl} alt={recipe.title} className="h-full w-full object-cover" />
             ) : (
-              <span className="text-6xl">🍽️</span>
+              <PlateIcon className="h-16 w-16 text-charcoal/30" />
             )}
           </div>
 
           <div className="p-6">
             <h1 className="font-heading text-4xl tracking-wide text-charcoal">{recipe.title}</h1>
             <p className="mt-1 text-sm text-charcoal-light">par {recipe.author.name}</p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-cream-dark px-3 py-1 text-xs font-medium text-charcoal-light">
+                {CATEGORY_LABEL[recipe.category]}
+              </span>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-medium ${DIFFICULTY_STYLE[recipe.difficulty]}`}
+              >
+                {DIFFICULTY_LABEL[recipe.difficulty]}
+              </span>
+              <span className="flex items-center gap-1 text-xs text-charcoal-light">
+                <ClockIcon className="h-3.5 w-3.5" />
+                {recipe.prepTime} min
+              </span>
+            </div>
+
             <p className="mt-4 text-charcoal">{recipe.description}</p>
 
             <div className="mt-4 flex items-center gap-3">

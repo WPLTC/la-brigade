@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
+import { ChefHatIcon } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import { ApiError } from '../lib/api'
 
@@ -35,7 +36,7 @@ export function RegisterPage() {
 
       <main className="flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-sm rounded-2xl border border-charcoal/10 bg-white p-8 shadow-sm">
-          <span className="text-3xl">👨‍🍳</span>
+          <ChefHatIcon className="h-8 w-8 text-brigade-red" />
           <h1 className="mt-2 font-heading text-3xl tracking-wide text-charcoal">Inscription</h1>
 
           <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">

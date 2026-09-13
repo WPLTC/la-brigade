@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { ConfirmDialog } from './ConfirmDialog'
+import { Logo } from './Logo'
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
@@ -17,9 +18,8 @@ export function Navbar() {
   return (
     <header className="border-b border-charcoal/10 bg-cream">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="text-2xl">🧑‍🍳</span>
-          <span className="font-heading text-2xl tracking-wide text-charcoal">La Brigade</span>
+        <Link to="/">
+          <Logo />
         </Link>
 
         <nav className="flex items-center text-sm font-medium text-charcoal-light">
@@ -46,9 +46,8 @@ export function Navbar() {
 
               <Link
                 to="/profile"
-                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 hover:bg-white hover:text-brigade-red"
+                className="rounded-full px-3 py-1.5 hover:bg-white hover:text-brigade-red"
               >
-                <span aria-hidden="true">👤</span>
                 {user?.name}
               </Link>
 

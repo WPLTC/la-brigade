@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
+import { ChefHatIcon, PlateIcon } from '../components/icons'
 import { apiFetch, ApiError } from '../lib/api'
 
 interface PendingRecipe {
@@ -47,7 +48,7 @@ export function ModerationPage() {
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <span className="text-3xl">🧑‍🍳</span>
+        <ChefHatIcon className="h-8 w-8 text-brigade-red" />
         <h1 className="mt-2 font-heading text-4xl tracking-wide text-charcoal">
           Validation par la brigade
         </h1>
@@ -79,7 +80,7 @@ export function ModerationPage() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <span className="text-3xl">🍽️</span>
+                  <PlateIcon className="h-8 w-8 text-charcoal/30" />
                 )}
               </div>
 

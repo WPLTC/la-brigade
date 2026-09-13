@@ -6,6 +6,9 @@ const createRecipeSchema = z.object({
   title: z.string().min(3),
   description: z.string().min(10),
   imageUrl: z.string().url().optional(),
+  prepTime: z.number().int().min(1).max(600),
+  category: z.enum(['ENTREE', 'PLAT', 'DESSERT']),
+  difficulty: z.enum(['FACILE', 'MOYEN', 'DIFFICILE']),
   ingredients: z.array(z.object({ name: z.string().min(1), quantity: z.string().min(1) })).min(1),
   steps: z.array(z.object({ order: z.number().int().min(1), description: z.string().min(1) })).min(1),
 })
@@ -48,13 +51,17 @@ export async function createRecipe(req: Request, res: Response) {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() })
   }
-  const { title, description, imageUrl, ingredients, steps } = parsed.data
+  const { title, description, imageUrl, prepTime, category, difficulty, ingredients, steps } =
+    parsed.data
 
   const recipe = await prisma.recipe.create({
     data: {
       title,
       description,
       imageUrl,
+      prepTime,
+      category,
+      difficulty,
       authorId: req.user!.userId,
       ingredients: { create: ingredients },
       steps: { create: steps },
